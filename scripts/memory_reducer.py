@@ -1,7 +1,7 @@
 import pandas as pd
 from pandas.api.types import is_numeric_dtype
 import numpy as np
-def memory_reducer(path):
+def reducer(path):
     df = pd.read_csv(path)
     for label, content in df.items():
         if is_numeric_dtype(content) :
@@ -28,4 +28,11 @@ def memory_reducer(path):
 
     return df
 
-print(memory_reducer('./data/sp500.csv'))
+def memory_reducer(paths):
+    reduced_dataframes = []
+    for path in paths:
+        reduced_df = reducer(path)
+        reduced_dataframes.append(reduced_df)
+    return reduced_dataframes
+    
+
