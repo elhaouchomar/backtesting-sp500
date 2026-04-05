@@ -3,13 +3,13 @@ import numpy as np
 
 def preprocessing(prices, sp500):
    
-    prices['date'] = pd.to_datetime(prices['date'])
-    prices = prices.sort_values(['ticker', 'date'])
+    prices['Date'] = pd.to_datetime(prices['Date'])
+    prices = prices.sort_values(['Ticker', 'Date'])
 
    
     prices = (
-        prices.set_index('date')
-        .groupby('ticker')
+        prices.set_index('Date')
+        .groupby('Ticker')
         .resample('M')
         .last()
         .drop(columns='ticker')
