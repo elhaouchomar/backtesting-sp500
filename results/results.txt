@@ -1,0 +1,5 @@
+Strategy PnL: $65.76
+SP500 PnL: $12.23
+Trading months: 167
+Avg monthly PnL: $0.3937
+Avg positions: 18.7

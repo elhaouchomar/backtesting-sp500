@@ -1,0 +1,48 @@
+STOCK PRICE OUTLIERS - IDENTIFIED FROM DATASET
+============================================================
+
+These outliers were found by scanning the actual data:
+
+OUTLIER 1
+------------------------------
+Ticker: PCLN
+Date: 2014-02-28
+Price: $1348.84
+Reason: Extreme high price: $1348.84
+Source: Original stock_prices.csv dataset
+
+OUTLIER 2
+------------------------------
+Ticker: PCLN
+Date: 2014-05-31
+Price: $1278.63
+Reason: Extreme high price: $1278.63
+Source: Original stock_prices.csv dataset
+
+OUTLIER 3
+------------------------------
+Ticker: PCLN
+Date: 2014-08-31
+Price: $1244.31
+Reason: Extreme high price: $1244.31
+Source: Original stock_prices.csv dataset
+
+OUTLIER 4
+------------------------------
+Ticker: PCLN
+Date: 2014-07-31
+Price: $1242.45
+Reason: Extreme high price: $1242.45
+Source: Original stock_prices.csv dataset
+
+OUTLIER 5
+------------------------------
+Ticker: PCLN
+Date: 2014-10-31
+Price: $1206.21
+Reason: Extreme high price: $1206.21
+Source: Original stock_prices.csv dataset
+
+
+NOTE: These outliers were identified by analyzing extreme values
+in the dataset. During 2008-2009 crisis, return outliers were preserved.
