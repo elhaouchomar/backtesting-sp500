@@ -1,27 +1,13 @@
 # Backtesting S&P 500 – Momentum Strategy
 
-## 📌 Overview
+## Overview
 
-This project implements a quantitative **momentum-based stock-picking strategy** using historical S&P 500 constituent data. As a quantitative analyst at a hedge fund, you will:
-
-- Clean and preprocess messy financial time series
-- Optimize memory usage for large datasets
-- Develop a stock selection signal based on 1-year average returns
-- Backtest the strategy against the S&P 500 benchmark
-- Generate performance reports and visualizations
-
-The goal is to **outperform the market** using a simple yet robust momentum strategy.
+This project implements a quantitative **momentum-based stock-picking strategy** using historical S&P 500 constituent data. As a quantitative analyst at a hedge fund, the goal is to clean and preprocess messy financial time series, develop a stock selection signal based on 1-year average returns, and backtest the strategy against the S&P 500 benchmark.
 
 ---
 
-## 👥 Group Setup
+## Project Structure
 
-- **Team size**: 1–3 members
-- All code must be collaboratively developed and submitted via Git
-- Repository: `https://learn.zone01oujda.ma/git/oelhaouc/backtesting-sp500`
-
----
-## 📂 Project Structure
 ```
 backtesting-sp500/
 │
@@ -29,33 +15,32 @@ backtesting-sp500/
 ├── requirements.txt
 │
 ├── data/
-│ ├── sp500.csv
-│ └── stock_prices.csv
+│   ├── sp500.csv
+│   └── stock_prices.csv
 │
 ├── notebook/
-│ └── analysis.ipynb
+│   └── analysis.ipynb
 │
 ├── scripts/
-│ ├── memory_reducer.py
-│ ├── preprocessing.py
-│ ├── create_signal.py
-│ ├── backtester.py
-│ └── main.py
+│   ├── memory_reducer.py
+│   ├── preprocessing.py
+│   ├── create_signal.py
+│   ├── backtester.py
+│   └── main.py
 │
 └── results/
-├── plots/
-│ ├── avg_price_over_time.png
-│ └── cumulative_performance.png
-├── results.txt
-└── outliers.txt
+    ├── plots/
+    │   ├── missing_per_year.png
+    │   ├── outliers_per_ticker.png
+    │   ├── average_price_over_time.png
+    │   └── performance.png
+    ├── results.txt
+    └── outliers.txt
 ```
 
-
 ---
 
----
-
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the repository
 
@@ -63,119 +48,127 @@ backtesting-sp500/
 git clone https://learn.zone01oujda.ma/git/oelhaouc/backtesting-sp500.git
 cd backtesting-sp500
 ```
-2. Install dependencies
+
+### 2. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
-### Run the full pipeline
+
+### 3. Run the full pipeline
+
 ```bash
 python3 scripts/main.py
 ```
-This will execute:
 
-- Memory optimization of input data
-- Data preprocessing and EDA
-- Signal generation
-- Backtesting against S&P 500
-- Saving results and plots
+This executes memory optimization → preprocessing → signal generation → backtesting, and saves all results and plots to `results/`.
+
+---
 
 ## Data Description
 
-| File               | Description                                                      |
-|--------------------|------------------------------------------------------------------|
-| sp500.csv          | S&P 500 index historical data (adjusted close)                   |
-| stock_prices.csv   | Monthly close prices for all current/past S&P 500 constituents   |
+| File | Description |
+|------|-------------|
+| `sp500.csv` | S&P 500 index historical data (date, OHLC, adjusted close, volume) |
+| `stock_prices.csv` | Close prices for all current and past S&P 500 constituents |
 
- **Note:** The dataset contains intentional issues:
-
- - Missing values  
- - Price spikes and errors  
- - Stock splits and dividend adjustments  
- - Changing S&P 500 composition over time  
-
-##  Strategy Logic
-
-### 🔹 Signal Construction
-
-- Compute monthly past returns for each company  
-- Calculate average return over the previous 12 months (1-year momentum)  
-- Select top 20 companies by average return each month  
-- Signal = `True` for selected stocks, `False` otherwise  
-
-###  Benchmark
-
-- S&P 500 index  
-- Fixed monthly investment of $20 (equal to the number of selected stocks)  
+> **Note:** The dataset contains intentional data quality issues: missing values, price spikes, stock splits, dividend adjustments, and changing S&P 500 composition over time. Preprocessing handles the major issues without overfitting to the noise.
 
 ---
 
-##  Performance Metrics
+## Module Descriptions
 
-The backtest computes:
+### `memory_reducer.py`
 
-- **Profit & Loss (PnL)** = Signal × Future Returns  
-- **Strategy Return** = PnL / Number of selected stocks (20)  
-- **Cumulative PnL** over the entire backtest period  
-- Comparison chart vs. S&P 500 benchmark  
+Loads a CSV file and returns a memory-optimized DataFrame.
 
-## ⚙️ Module Specifications
+- Converts float columns to `np.float32` (minimum precision, as required)
+- Downcasts integer columns to the smallest fitting type (`uint8` → `uint32` → `float32`)
+- Converts string/object columns to `category`
+- Prints the resulting memory usage for both DataFrames
 
-### 1. 📦 `memory_reducer.py`
+### `preprocessing.py`
+
+Cleans and transforms the raw price data into a model-ready format.
+
+- Strips column whitespace and parses dates
+- Melts wide-format price data into long format (Date, ticker, price)
+- Resamples to month-end frequency, keeping the last observed price
+- Filters prices outside the range $0.10 – $10,000
+- Computes monthly past returns and monthly future returns
+- Sets return outliers to NaN (returns > 1 or < –0.5), **except for 2008–2009**
+- Forward-fills missing past returns within each company independently
+- Drops rows where values cannot be filled
+- Asserts zero remaining null values
+
+### `create_signal.py`
+
+Generates the momentum trading signal.
+
+- Computes `average_return_1y`: 12-month rolling average of past returns, grouped by ticker
+- Ranks companies by `average_return_1y` within each month (rank 1 = highest)
+- Sets `signal = True` for the top 20 companies each month
+
+### `backtester.py`
+
+Runs the backtest and computes performance metrics.
+
+- Computes PnL as `signal × monthly_future_return` (vectorized, no loops)
+- Computes strategy return as `PnL / number of active positions`
+- Benchmarks against S&P 500 with a fixed $20 monthly investment
+- Computes cumulative PnL using `cumsum()` for both strategies
+- Raises an error if total PnL exceeds $75 (signals uncorrected outliers)
+- Saves metrics to `results/results.txt`
+- Saves cumulative performance chart to `results/plots/performance.png`
+
+### `main.py`
+
+Orchestrates the full pipeline end-to-end:
 
 ```python
-def optimize_memory(df: pd.DataFrame) -> pd.DataFrame
+prices, sp500 = memory_reducer(paths)
+prices, sp500 = preprocessing(prices, sp500)
+prices        = create_signal(prices)
+backtest(prices, sp500)
 ```
-- Downcasts numeric columns to smallest possible dtype (`float32` minimum for floats)
-
-- Ensures:
-  - `stock_prices.csv` < 8MB  
-  - `sp500.csv` < 0.15MB  
 
 ---
 
-## 🧹 preprocessing.py + 📓 analysis.ipynb
+## Strategy Logic
 
-- Missing values analysis  
-- Outlier detection (IQR and Z-score methods)  
-- Price outlier filtering: `0.1 < price < 10,000`  
-- Monthly resampling (last value of month)  
-- Monthly return calculation (historical & future)  
-- Return outlier capping (`-0.5` to `1.0`, except 2008–2009)  
-- Forward fill of missing values per company  
+### Signal Construction
 
-## 📋 EDA Requirements (`analysis.ipynb`)
+1. Compute monthly past returns for each company
+2. Calculate the 12-month rolling average return (1-year momentum)
+3. Rank all companies within each month — rank 1 = highest average return
+4. Select the top 20 companies: `signal = True`
 
-The notebook must include:
+### Benchmark
 
-- Missing values analysis – per variable and per year  
-- Outliers analysis – using IQR or Z-score  
-
-- Plot:
-  - Average price over time **OR**
-  - Price consistency across companies  
-
-- 5 outliers identified – including:
-  - Ticker  
-  - Date  
-  - Price  
-  - External source verification (e.g., stock splits, earnings events)  
-
-- Outliers saved to `results/outliers.txt`  
+The S&P 500 benchmark uses a fixed monthly investment of $20 (matching the 20 selected stocks), applied to the S&P 500 monthly return.
 
 ---
 
-## 📊 Plot Requirements
+## Performance & Conclusion
 
-All plots must:
+The momentum strategy selects the 20 best-performing stocks each month based on their 1-year average return, rebalancing monthly. Over the full backtesting period the strategy produces a cumulative PnL below $75, confirming that outlier preprocessing is effective.
 
-- Be saved in `results/plots/`  
-- Accept a `plot=False` parameter (no display by default)  
-- Contain titles and axis labels  
+The chart in `results/plots/performance.png` shows the cumulative PnL of the strategy versus the S&P 500 benchmark. The strategy generally tracks the benchmark with periodic outperformance driven by momentum persistence in top-returning stocks.
 
-## ⚠️ Important Notes
+Key results are saved in `results/results.txt`:
+- Strategy cumulative PnL
+- S&P 500 benchmark cumulative PnL
+- Average monthly PnL and average monthly returns for both strategies
+- Number of trading months and average active positions
 
-- The data is intentionally imperfect – your preprocessing should handle major issues without overfitting  
-- 2008–2009 financial crisis returns are **exempt** from outlier capping  
-- Use **vectorized operations** (no loops) for backtesting  
-- Do **not** introduce look-ahead bias (future returns must be computed separately)  
-- The final PnL should be reasonable (< $75) – if higher, outliers remain  
+---
+
+## Requirements
+
+See `requirements.txt` for the full list of dependencies. Key libraries:
+
+| Library | Purpose |
+|---------|---------|
+| `pandas` | Data manipulation and time series resampling |
+| `numpy` | Numerical operations and dtype optimization |
+| `matplotlib` | Performance charts and EDA plots |
