@@ -42,26 +42,34 @@ backtesting-sp500/
 
 ## Getting Started
 
-### 1. Clone the repository
-
-```bash
-git clone https://learn.zone01oujda.ma/git/oelhaouc/backtesting-sp500.git
-cd backtesting-sp500
+### 1. Clone
+```
+git clone  https://learn.zone01oujda.ma/git/oelhaouc/backtesting-sp500.git
+```
+### 2. Create virtual environment
+```
+python3 -m venv sp500
 ```
 
-### 2. Install dependencies
+### 3. Activate environment
+```
+source ./sp500/bin/activate
+```
 
-```bash
+### 4. Install dependencies
+```
 pip install -r requirements.txt
 ```
 
-### 3. Run the full pipeline
-
-```bash
-python3 scripts/main.py
+### 5. Run the complete pipeline
+```
+python ./scripts/main.py
 ```
 
-This executes memory optimization → preprocessing → signal generation → backtesting, and saves all results and plots to `results/`.
+### 6. Explore EDA notebook
+```
+jupyter lab
+```
 
 ---
 
